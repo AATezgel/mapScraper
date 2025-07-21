@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}Ayarlar - Map Scraper{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .sidebar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 0;
+        position: fixed;
+        width: 250px;
+        z-index: 1000;
+    }
+    .sidebar .nav-link {
+        color: white;
+        padding: 15px 20px;
+        border-radius: 0;
+        transition: all 0.3s ease;
+    }
+    .sidebar .nav-link:hover {
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+    }
+    .sidebar .nav-link.active {
+        background-color: rgba(255,255,255,0.2);
+        color: white;
+    }
+    .main-content {
+        margin-left: 250px;
+        padding: 20px;
+        min-height: 100vh;
+        width: calc(100% - 250px);
+    }
+    .header {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    .brand {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .brand h4 {
+        color: white;
+        margin: 0;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            position: fixed;
+            z-index: 1050;
+        }
+        .sidebar.show {
+            transform: translateX(0);
+        }
+        .main-content {
+            margin-left: 0;
+            padding: 10px;
+            width: 100%;
+        }
+        .header {
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .card {
+            margin-bottom: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="brand">
+            <h4><i class="fas fa-map-marker-alt"></i> Map Scraper</h4>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'dashboard' %}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'map_scraper' %}">
+                    <i class="fas fa-map"></i> Map Scraper
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'settings' %}">
+                    <i class="fas fa-cog"></i> Ayarlar
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Çıkış
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-primary d-md-none me-3" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2><i class="fas fa-cog"></i> Ayarlar</h2>
+                </div>
+                <div>
+                    <span class="text-muted">{{ user.username }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- N8N Ayarları -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-link"></i> N8N Webhook Ayarları</h5>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="webhook_url" class="form-label">N8N Webhook URL</label>
+                        <input type="url" class="form-control" id="webhook_url" name="webhook_url"
+                               value="{{ webhook_url }}" 
+                               placeholder="N8N webhook URL'nizi girin" required>
+                        <div class="form-text">Bu URL scraping işlemlerini tetiklemek için kullanılır.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="auto_refresh" name="auto_refresh" 
+                                   {% if auto_refresh %}checked{% endif %}>
+                            <label class="form-check-label" for="auto_refresh">
+                                Otomatik Yenileme (10 saniyede bir)
+                            </label>
+                            <div class="form-text">Veri tablosunun otomatik olarak yenilenmesini sağlar.</div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Ayarları Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sistem Bilgileri -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Sistem Bilgileri</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Django Sürümü</h6>
+                        <p class="text-muted">{{ django_version }}</p>
+                        
+                        <h6>Kullanıcı</h6>
+                        <p class="text-muted">{{ user.username }} ({{ user.email }})</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Supabase Durumu</h6>
+                        <p class="text-{{ supabase_connected|yesno:'success,danger' }}">
+                            {{ supabase_connected|yesno:'🟢 Bağlı,🔴 Bağlı Değil' }}
+                        </p>
+                        
+                        <h6>Son Güncelleme</h6>
+                        <p class="text-muted" id="lastUpdateTime">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sayfa yüklendiğinde ayarları yükle
+document.addEventListener('DOMContentLoaded', function() {
+    // Son güncelleme zamanını göster
+    document.getElementById('lastUpdateTime').textContent = new Date().toLocaleString('tr-TR');
+    
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+        
+        // Sidebar dışında tıklandığında kapat
+        document.addEventListener('click', function(e) {
+            if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
