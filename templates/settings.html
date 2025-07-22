@@ -4,49 +4,143 @@
 
 {% block extra_css %}
 <style>
-    body {
-        background-color: #f8f9fa;
+    .settings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
     }
-    .sidebar {
+    
+    .settings-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 0;
-        position: fixed;
-        width: 250px;
-        z-index: 1000;
-    }
-    .sidebar .nav-link {
         color: white;
-        padding: 15px 20px;
-        border-radius: 0;
-        transition: all 0.3s ease;
-    }
-    .sidebar .nav-link:hover {
-        background-color: rgba(255,255,255,0.1);
-        color: white;
-    }
-    .sidebar .nav-link.active {
-        background-color: rgba(255,255,255,0.2);
-        color: white;
-    }
-    .main-content {
-        margin-left: 250px;
-        padding: 20px;
-        min-height: 100vh;
-        width: calc(100% - 250px);
-    }
-    .header {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .card {
         border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .settings-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         border: none;
+    }
+    
+    .settings-section h5 {
+        color: #667eea;
         margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f8f9fa;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-test {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-size: 0.875rem;
+    }
+    
+    .btn-test:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .status-connected {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .webhook-status {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .platform-section {
+        border-left: 4px solid #667eea;
+        padding-left: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .platform-section.instagram {
+        border-left-color: #833ab4;
+    }
+    
+    .platform-section.facebook {
+        border-left-color: #1877f2;
+    }
+    
+    .platform-section.twitter {
+        border-left-color: #1da1f2;
+    }
+    
+    .platform-section.linkedin {
+        border-left-color: #0077b5;
+    }
+    
+    .platform-section.tiktok {
+        border-left-color: #ff0050;
+    }
+    
+    @media (max-width: 768px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .settings-container {
+            padding: 10px;
+        }
     }
     .card-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -54,193 +148,775 @@
         border-radius: 15px 15px 0 0 !important;
         border: none;
     }
-    .brand {
-        padding: 20px;
-        text-align: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .brand h4 {
-        color: white;
-        margin: 0;
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-    }
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    @media (max-width: 768px) {
-        .sidebar {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            position: fixed;
-            z-index: 1050;
-        }
-        .sidebar.show {
-            transform: translateX(0);
-        }
-        .main-content {
-            margin-left: 0;
-            padding: 10px;
-            width: 100%;
-        }
-        .header {
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .card {
-            margin-bottom: 15px;
-        }
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="d-flex">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="brand">
-            <h4><i class="fas fa-map-marker-alt"></i> Map Scraper</h4>
-        </div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'dashboard' %}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'map_scraper' %}">
-                    <i class="fas fa-map"></i> Map Scraper
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="{% url 'settings' %}">
-                    <i class="fas fa-cog"></i> Ayarlar
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i> Çıkış
-                </a>
-            </li>
-        </ul>
-    </nav>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <button class="btn btn-primary d-md-none me-3" id="mobileMenuBtn">
-                        <i class="fas fa-bars"></i>
+<div class="settings-container">
+    <!-- Header -->
+    <div class="settings-header">
+        <h2><i class="fas fa-cog"></i> Sistem Ayarları</h2>
+        <p class="mb-0">Platform entegrasyonlarını ve sistem ayarlarını yönetin</p>
+    </div>
+
+    <!-- Settings Grid -->
+    <div class="settings-grid">
+        <!-- Supabase Ayarları -->
+        <div class="settings-section">
+            <h5><i class="fas fa-database"></i> Supabase Ayarları</h5>
+            <form id="supabaseForm">
+                <div class="mb-3">
+                    <label for="supabaseUrl" class="form-label">Supabase URL</label>
+                    <input type="url" class="form-control" id="supabaseUrl" 
+                           placeholder="https://your-project.supabase.co" required>
+                </div>
+                <div class="mb-3">
+                    <label for="supabaseKey" class="form-label">Supabase API Key</label>
+                    <input type="password" class="form-control" id="supabaseKey" 
+                           placeholder="Supabase anon key" required>
+                </div>
+                <div class="mb-3">
+                    <label for="supabaseServiceKey" class="form-label">Service Role Key</label>
+                    <input type="password" class="form-control" id="supabaseServiceKey" 
+                           placeholder="Service role key (opsiyonel)">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Kaydet
                     </button>
-                    <h2><i class="fas fa-cog"></i> Ayarlar</h2>
+                    <button type="button" class="btn btn-test" onclick="testSupabase()">
+                        <i class="fas fa-plug"></i> Bağlantıyı Test Et
+                    </button>
                 </div>
-                <div>
-                    <span class="text-muted">{{ user.username }}</span>
+                <div class="webhook-status">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><strong>Durum:</strong></span>
+                        <span id="supabaseStatus" class="status-badge status-disconnected">
+                            <i class="fas fa-times-circle"></i> Bağlı Değil
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
-        
-        <!-- N8N Ayarları -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-link"></i> N8N Webhook Ayarları</h5>
-            </div>
-            <div class="card-body">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+
+        <!-- Map Scraper Webhook Ayarı -->
+        <div class="settings-section">
+            <h5><i class="fas fa-share-alt"></i> Webhook Ayarları</h5>
+            
+            <form method="post">
+                {% csrf_token %}
                 
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="webhook_url" class="form-label">N8N Webhook URL</label>
-                        <input type="url" class="form-control" id="webhook_url" name="webhook_url"
-                               value="{{ webhook_url }}" 
-                               placeholder="N8N webhook URL'nizi girin" required>
-                        <div class="form-text">Bu URL scraping işlemlerini tetiklemek için kullanılır.</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="auto_refresh" name="auto_refresh" 
-                                   {% if auto_refresh %}checked{% endif %}>
-                            <label class="form-check-label" for="auto_refresh">
-                                Otomatik Yenileme (10 saniyede bir)
-                            </label>
-                            <div class="form-text">Veri tablosunun otomatik olarak yenilenmesini sağlar.</div>
-                        </div>
-                    </div>
-                    
+                <!-- Map Scraper Webhook -->
+                <div class="mb-3">
+                    <label for="webhook_url" class="form-label">Map Scraper Webhook URL</label>
+                    <input type="url" class="form-control" id="webhook_url" name="webhook_url" 
+                           value="{{ webhook_url }}" 
+                           placeholder="https://notifyn8n.tezgel.com/webhook/your-webhook-id">
+                    <div class="form-text">Otomasyon Map Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                </div>
+                
+                <!-- Instagram Webhook -->
+                <div class="mb-3">
+                    <label for="instagram_webhook_url" class="form-label">Instagram Scraper Webhook URL</label>
+                    <input type="url" class="form-control" id="instagram_webhook_url" name="instagram_webhook_url" 
+                           value="{{ instagram_webhook_url }}" 
+                           placeholder="https://notifyn8n.tezgel.com/webhook/instagram-scraper">
+                    <div class="form-text">Otomasyon Instagram Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                </div>
+                
+                <!-- Facebook Webhook -->
+                <div class="mb-3">
+                    <label for="facebook_webhook_url" class="form-label">Facebook Scraper Webhook URL</label>
+                    <input type="url" class="form-control" id="facebook_webhook_url" name="facebook_webhook_url" 
+                           value="{{ facebook_webhook_url }}" 
+                           placeholder="https://notifyn8n.tezgel.com/webhook/facebook-scraper">
+                    <div class="form-text">Otomasyon Facebook Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                </div>
+                
+                <!-- Twitter Webhook -->
+                <div class="mb-3">
+                    <label for="twitter_webhook_url" class="form-label">Twitter Scraper Webhook URL</label>
+                    <input type="url" class="form-control" id="twitter_webhook_url" name="twitter_webhook_url" 
+                           value="{{ twitter_webhook_url }}" 
+                           placeholder="https://notifyn8n.tezgel.com/webhook/twitter-scraper">
+                    <div class="form-text">Otomasyon Twitter Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                </div>
+                
+                <!-- LinkedIn Webhook -->
+                <div class="mb-3">
+                    <label for="linkedin_webhook_url" class="form-label">LinkedIn Scraper Webhook URL</label>
+                    <input type="url" class="form-control" id="linkedin_webhook_url" name="linkedin_webhook_url" 
+                           value="{{ linkedin_webhook_url }}" 
+                           placeholder="https://notifyn8n.tezgel.com/webhook/linkedin-scraper">
+                    <div class="form-text">Otomasyon LinkedIn Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                </div>
+                
+                <!-- TikTok Webhook -->
+                <div class="mb-3">
+                    <label for="tiktok_webhook_url" class="form-label">TikTok Scraper Webhook URL</label>
+                    <input type="url" class="form-control" id="tiktok_webhook_url" name="tiktok_webhook_url" 
+                           value="{{ tiktok_webhook_url }}" 
+                           placeholder="https://notifyn8n.tezgel.com/webhook/tiktok-scraper">
+                    <div class="form-text">Otomasyon TikTok Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="auto_refresh" name="auto_refresh" 
+                           {% if auto_refresh %}checked{% endif %}>
+                    <label class="form-check-label" for="auto_refresh">
+                        Otomatik veri yenileme
+                    </label>
+                </div>
+                
+                <div class="d-flex gap-2 flex-wrap">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Ayarları Kaydet
                     </button>
-                </form>
+                    <button type="button" class="btn btn-test" onclick="testN8N()">
+                        <i class="fas fa-plug"></i> Map Webhook Test
+                    </button>
+                    <button type="button" class="btn btn-test" onclick="testInstagramWebhook()">
+                        <i class="fab fa-instagram"></i> Instagram Test
+                    </button>
+                    <button type="button" class="btn btn-test" onclick="testFacebookWebhook()">
+                        <i class="fab fa-facebook"></i> Facebook Test
+                    </button>
+                    <button type="button" class="btn btn-test" onclick="testTwitterWebhook()">
+                        <i class="fab fa-twitter"></i> Twitter Test
+                    </button>
+                    <button type="button" class="btn btn-test" onclick="testLinkedInWebhook()">
+                        <i class="fab fa-linkedin"></i> LinkedIn Test
+                    </button>
+                    <button type="button" class="btn btn-test" onclick="testTikTokWebhook()">
+                        <i class="fab fa-tiktok"></i> TikTok Test
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Supabase Bağlantı Durumu -->
+        <div class="settings-section">
+            <h5><i class="fas fa-database"></i> Supabase Bağlantı Durumu</h5>
+            <div class="webhook-status">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><strong>Durum:</strong></span>
+                    <span class="status-badge {% if supabase_connected %}status-connected{% else %}status-disconnected{% endif %}">
+                        <i class="fas {% if supabase_connected %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i> 
+                        {% if supabase_connected %}Bağlı{% else %}Bağlı Değil{% endif %}
+                    </span>
+                </div>
+                {% if supabase_connected %}
+                <small class="text-muted">Tüm veriler Supabase'den çekiliyor.</small>
+                {% else %}
+                <small class="text-danger">Supabase bağlantısı yok, veritabanından fallback kullanılıyor.</small>
+                {% endif %}
             </div>
         </div>
-        
-        <!-- Sistem Bilgileri -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Sistem Bilgileri</h5>
+
+        <!-- Sistem Ayarları -->
+        <div class="settings-section">
+            <h5><i class="fas fa-cogs"></i> Sistem Ayarları</h5>
+            <form id="systemForm">
+                <div class="mb-3">
+                    <label for="defaultTimeout" class="form-label">Varsayılan Timeout (saniye)</label>
+                    <input type="number" class="form-control" id="defaultTimeout" 
+                           value="30" min="10" max="300">
+                </div>
+                <div class="mb-3">
+                    <label for="maxRetries" class="form-label">Maksimum Tekrar Sayısı</label>
+                    <input type="number" class="form-control" id="maxRetries" 
+                           value="3" min="1" max="10">
+                </div>
+                <div class="mb-3">
+                    <label for="dataPruning" class="form-label">Veri Temizleme (gün)</label>
+                    <input type="number" class="form-control" id="dataPruning" 
+                           value="30" min="1" max="365">
+                    <div class="form-text">Bu süreden eski veriler otomatik olarak silinir</div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoSync" checked>
+                        <label class="form-check-label" for="autoSync">
+                            Otomatik Supabase Senkronizasyonu
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications">
+                        <label class="form-check-label" for="emailNotifications">
+                            E-posta Bildirimleri
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-save"></i> Sistem Ayarlarını Kaydet
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sistem Durumu -->
+    <div class="settings-section">
+        <h5><i class="fas fa-heartbeat"></i> Sistem Durumu</h5>
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <div class="p-3">
+                    <i id="systemStatusIcon" class="fas fa-server fa-2x text-success"></i>
+                    <h6 class="mt-2">Sistem</h6>
+                    <span id="systemStatusText" class="status-badge status-connected">Çalışıyor</span>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Django Sürümü</h6>
-                        <p class="text-muted">{{ django_version }}</p>
-                        
-                        <h6>Kullanıcı</h6>
-                        <p class="text-muted">{{ user.username }} ({{ user.email }})</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Supabase Durumu</h6>
-                        <p class="text-{{ supabase_connected|yesno:'success,danger' }}">
-                            {{ supabase_connected|yesno:'🟢 Bağlı,🔴 Bağlı Değil' }}
-                        </p>
-                        
-                        <h6>Son Güncelleme</h6>
-                        <p class="text-muted" id="lastUpdateTime">-</p>
-                    </div>
+            <div class="col-md-3 text-center">
+                <div class="p-3">
+                    <i id="databaseStatusIcon" class="fas fa-database fa-2x text-warning"></i>
+                    <h6 class="mt-2">Veritabanı</h6>
+                    <span id="databaseStatusText" class="status-badge status-disconnected">Test Ediliyor...</span>
+                </div>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="p-3">
+                    <i id="webhookStatusIcon" class="fas fa-link fa-2x text-warning"></i>
+                    <h6 class="mt-2">Webhooks</h6>
+                    <span id="webhookStatusText" class="status-badge status-disconnected">Test Ediliyor...</span>
+                </div>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="p-3">
+                    <i id="syncStatusIcon" class="fas fa-sync fa-2x text-warning"></i>
+                    <h6 class="mt-2">Senkronizasyon</h6>
+                    <span id="syncStatusText" class="status-badge status-disconnected">Test Ediliyor...</span>
                 </div>
             </div>
         </div>
+        <div class="text-center mt-3">
+            <button class="btn btn-test" onclick="checkSystemStatus()">
+                <i class="fas fa-refresh"></i> Durumu Yenile
+            </button>
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 // Sayfa yüklendiğinde ayarları yükle
 document.addEventListener('DOMContentLoaded', function() {
-    // Son güncelleme zamanını göster
-    document.getElementById('lastUpdateTime').textContent = new Date().toLocaleString('tr-TR');
-    
-    // Mobile menu toggle
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.querySelector('.sidebar');
-    
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', function() {
-            sidebar.classList.toggle('show');
-        });
-        
-        // Sidebar dışında tıklandığında kapat
-        document.addEventListener('click', function(e) {
-            if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-                sidebar.classList.remove('show');
-            }
-        });
-    }
+    loadSettings();
+    checkSystemStatus();
 });
+
+function loadSettings() {
+    // Supabase ayarlarını yükle
+    fetch('/api/settings/supabase/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('supabaseUrl').value = data.settings.url || '';
+                document.getElementById('supabaseKey').value = data.settings.key || '';
+                document.getElementById('supabaseServiceKey').value = data.settings.service_key || '';
+                updateSupabaseStatus(data.settings.connected);
+            }
+        })
+        .catch(error => console.error('Supabase ayarları yüklenemedi:', error));
+
+    // N8N ayarlarını yükle
+    fetch('/api/settings/n8n/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('n8nBaseUrl').value = data.settings.base_url || '';
+                document.getElementById('n8nApiKey').value = data.settings.api_key || '';
+                updateN8NStatus(data.settings.connected);
+            }
+        })
+        .catch(error => console.error('N8N ayarları yüklenemedi:', error));
+
+    // Webhook URLs'leri yükle
+    fetch('/api/settings/webhooks/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const webhooks = data.settings;
+                document.getElementById('mapWebhookUrl').value = webhooks.map || '';
+                document.getElementById('instagramWebhookUrl').value = webhooks.instagram || '';
+                document.getElementById('facebookWebhookUrl').value = webhooks.facebook || '';
+                document.getElementById('twitterWebhookUrl').value = webhooks.twitter || '';
+                document.getElementById('linkedinWebhookUrl').value = webhooks.linkedin || '';
+                document.getElementById('tiktokWebhookUrl').value = webhooks.tiktok || '';
+            }
+        })
+        .catch(error => console.error('Webhook ayarları yüklenemedi:', error));
+
+    // Sistem ayarlarını yükle
+    fetch('/api/settings/system/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const settings = data.settings;
+                document.getElementById('defaultTimeout').value = settings.timeout || 30;
+                document.getElementById('maxRetries').value = settings.retries || 3;
+                document.getElementById('dataPruning').value = settings.pruning || 30;
+                document.getElementById('autoSync').checked = settings.auto_sync || false;
+                document.getElementById('emailNotifications').checked = settings.email_notifications || false;
+            }
+        })
+        .catch(error => console.error('Sistem ayarları yüklenemedi:', error));
+}
+
+// Supabase form submit
+document.getElementById('supabaseForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const settings = {
+        url: document.getElementById('supabaseUrl').value,
+        key: document.getElementById('supabaseKey').value,
+        service_key: document.getElementById('supabaseServiceKey').value
+    };
+    
+    fetch('/api/settings/supabase/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Supabase ayarları kaydedildi!', 'success');
+            updateSupabaseStatus(true);
+        } else {
+            showNotification('Hata: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Bağlantı hatası!', 'danger');
+    });
+});
+
+// N8N form submit
+document.getElementById('webhookForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const settings = {
+        base_url: document.getElementById('n8nBaseUrl').value,
+        api_key: document.getElementById('n8nApiKey').value
+    };
+    
+    fetch('/api/settings/n8n/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('N8N ayarları kaydedildi!', 'success');
+            updateN8NStatus(true);
+        } else {
+            showNotification('Hata: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Bağlantı hatası!', 'danger');
+    });
+});
+
+// Sistem ayarları form submit
+document.getElementById('systemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const settings = {
+        timeout: parseInt(document.getElementById('defaultTimeout').value),
+        retries: parseInt(document.getElementById('maxRetries').value),
+        pruning: parseInt(document.getElementById('dataPruning').value),
+        auto_sync: document.getElementById('autoSync').checked,
+        email_notifications: document.getElementById('emailNotifications').checked
+    };
+    
+    fetch('/api/settings/system/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Sistem ayarları kaydedildi!', 'success');
+        } else {
+            showNotification('Hata: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Bağlantı hatası!', 'danger');
+    });
+});
+
+function testSupabase() {
+    const url = document.getElementById('supabaseUrl').value;
+    const key = document.getElementById('supabaseKey').value;
+    
+    if (!url || !key) {
+        showNotification('Lütfen URL ve API Key alanlarını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test/supabase/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ url: url, key: key })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Supabase bağlantısı başarılı!', 'success');
+            updateSupabaseStatus(true);
+        } else {
+            showNotification('Bağlantı hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+            updateSupabaseStatus(false);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Test edilemedi!', 'danger');
+        updateSupabaseStatus(false);
+    });
+}
+
+function testN8N() {
+    const webhookUrl = document.getElementById('webhook_url').value;
+    
+    if (!webhookUrl) {
+        showNotification('Lütfen webhook URL alanını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test-n8n-webhook/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('N8N webhook başarıyla test edildi!', 'success');
+            updateN8NStatus(true);
+        } else {
+            let errorMsg = data.error || 'Bilinmeyen hata';
+            if (data.hint) {
+                errorMsg += ' ' + data.hint;
+            }
+            showNotification('N8N Webhook Test Hatası: ' + errorMsg, 'danger');
+            updateN8NStatus(false);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Webhook test edilemedi!', 'danger');
+        updateN8NStatus(false);
+    });
+}
+
+function testInstagramWebhook() {
+    const webhookUrl = document.getElementById('instagram_webhook_url').value;
+    
+    if (!webhookUrl) {
+        showNotification('Lütfen Instagram webhook URL alanını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test-instagram-webhook/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Instagram webhook başarıyla test edildi!', 'success');
+        } else {
+            showNotification('Instagram Webhook Test Hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Instagram webhook test edilemedi!', 'danger');
+    });
+}
+
+function testFacebookWebhook() {
+    const webhookUrl = document.getElementById('facebook_webhook_url').value;
+    
+    if (!webhookUrl) {
+        showNotification('Lütfen Facebook webhook URL alanını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test-facebook-webhook/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Facebook webhook başarıyla test edildi!', 'success');
+        } else {
+            showNotification('Facebook Webhook Test Hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Facebook webhook test edilemedi!', 'danger');
+    });
+}
+
+function testTwitterWebhook() {
+    const webhookUrl = document.getElementById('twitter_webhook_url').value;
+    
+    if (!webhookUrl) {
+        showNotification('Lütfen Twitter webhook URL alanını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test-twitter-webhook/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Twitter webhook başarıyla test edildi!', 'success');
+        } else {
+            showNotification('Twitter Webhook Test Hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Twitter webhook test edilemedi!', 'danger');
+    });
+}
+
+function testLinkedInWebhook() {
+    const webhookUrl = document.getElementById('linkedin_webhook_url').value;
+    
+    if (!webhookUrl) {
+        showNotification('Lütfen LinkedIn webhook URL alanını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test-linkedin-webhook/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('LinkedIn webhook başarıyla test edildi!', 'success');
+        } else {
+            showNotification('LinkedIn Webhook Test Hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('LinkedIn webhook test edilemedi!', 'danger');
+    });
+}
+
+function testTikTokWebhook() {
+    const webhookUrl = document.getElementById('tiktok_webhook_url').value;
+    
+    if (!webhookUrl) {
+        showNotification('Lütfen TikTok webhook URL alanını doldurun!', 'warning');
+        return;
+    }
+    
+    fetch('/api/test-tiktok-webhook/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('TikTok webhook başarıyla test edildi!', 'success');
+        } else {
+            showNotification('TikTok Webhook Test Hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('TikTok webhook test edilemedi!', 'danger');
+    });
+}
+
+function saveWebhookUrls() {
+    const webhooks = {
+        map: document.getElementById('mapWebhookUrl').value,
+        instagram: document.getElementById('instagramWebhookUrl').value,
+        facebook: document.getElementById('facebookWebhookUrl').value,
+        twitter: document.getElementById('twitterWebhookUrl').value,
+        linkedin: document.getElementById('linkedinWebhookUrl').value,
+        tiktok: document.getElementById('tiktokWebhookUrl').value
+    };
+    
+    fetch('/api/settings/webhooks/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(webhooks)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Webhook URLs kaydedildi!', 'success');
+        } else {
+            showNotification('Hata: ' + (data.error || 'Bilinmeyen hata'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Bağlantı hatası!', 'danger');
+    });
+}
+
+function updateSupabaseStatus(connected) {
+    const statusElement = document.getElementById('supabaseStatus');
+    if (connected) {
+        statusElement.className = 'status-badge status-connected';
+        statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Bağlı';
+    } else {
+        statusElement.className = 'status-badge status-disconnected';
+        statusElement.innerHTML = '<i class="fas fa-times-circle"></i> Bağlı Değil';
+    }
+}
+
+function updateN8NStatus(connected) {
+    const statusElement = document.getElementById('n8nStatus');
+    if (connected) {
+        statusElement.className = 'status-badge status-connected';
+        statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Bağlı';
+    } else {
+        statusElement.className = 'status-badge status-disconnected';
+        statusElement.innerHTML = '<i class="fas fa-times-circle"></i> Bağlı Değil';
+    }
+}
+
+function checkSystemStatus() {
+    // Sistem durumunu kontrol et
+    fetch('/api/system/status/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateSystemStatusDisplay(data.status);
+            }
+        })
+        .catch(error => console.error('Sistem durumu kontrol edilemedi:', error));
+}
+
+function updateSystemStatusDisplay(status) {
+    // Sistem durumu
+    updateStatusElement('system', status.system || false);
+    
+    // Veritabanı durumu
+    updateStatusElement('database', status.database || false);
+    
+    // Webhook durumu
+    updateStatusElement('webhook', status.webhooks || false);
+    
+    // Senkronizasyon durumu
+    updateStatusElement('sync', status.sync || false);
+}
+
+function updateStatusElement(type, isConnected) {
+    const icon = document.getElementById(type + 'StatusIcon');
+    const text = document.getElementById(type + 'StatusText');
+    
+    if (isConnected) {
+        icon.className = `fas fa-${getIconName(type)} fa-2x text-success`;
+        text.className = 'status-badge status-connected';
+        text.textContent = 'Çalışıyor';
+    } else {
+        icon.className = `fas fa-${getIconName(type)} fa-2x text-danger`;
+        text.className = 'status-badge status-disconnected';
+        text.textContent = 'Hata';
+    }
+}
+
+function getIconName(type) {
+    const icons = {
+        'system': 'server',
+        'database': 'database',
+        'webhook': 'link',
+        'sync': 'sync'
+    };
+    return icons[type] || 'question';
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = message + '<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>';
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 </script>
 {% endblock %}

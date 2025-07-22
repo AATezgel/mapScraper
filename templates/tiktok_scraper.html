@@ -1,0 +1,384 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}TikTok Scraper - Scraper App{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tiktok-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .header {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #ff0050 0%, #000000 100%);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    .brand {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .brand h4 {
+        color: white;
+        margin: 0;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #ff0050 0%, #000000 100%);
+        border: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+    }
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    .table-responsive {
+        max-height: 80vh;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    .table th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* TikTok Theme */
+    .tiktok-gradient {
+        background: linear-gradient(135deg, #ff0050 0%, #000000 100%);
+    }
+    
+    .tiktok-badge {
+        background: linear-gradient(135deg, #ff0050 0%, #000000 100%);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        display: inline-block;
+    }
+    
+    .verified-badge {
+        background: linear-gradient(135deg, #25f4ee 0%, #00f2ea 100%);
+        color: black;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        margin-left: 5px;
+        font-weight: bold;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .tiktok-container {
+            padding: 10px;
+        }
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            width: 250px;
+            position: fixed;
+            z-index: 1050;
+        }
+        .sidebar.show {
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tiktok-container">
+    <div class="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-primary d-md-none me-2" type="button" onclick="document.querySelector('.sidebar').classList.toggle('show')">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2><i class="fab fa-tiktok" style="color: #ff0050;"></i> TikTok Scraper</h2>
+            </div>
+            <div>
+                <span class="text-muted">Hoş geldiniz, {{ user.username }}!</span>
+            </div>
+        </div>
+    </div>
+        
+        <!-- Scraping Form -->
+        <div class="card">
+            <div class="card-header tiktok-gradient">
+                <h5 class="mb-0"><i class="fab fa-tiktok"></i> TikTok Veri Toplama</h5>
+            </div>
+            <div class="card-body">
+                <form id="tiktokScrapingForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">👤 Kullanıcı Adı</label>
+                                <input type="text" class="form-control" id="username" placeholder="@kullanici_adi">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="hashtag" class="form-label"># Hashtag</label>
+                                <input type="text" class="form-control" id="hashtag" placeholder="#hashtag">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="videoUrl" class="form-label">🎥 Video URL'si</label>
+                                <input type="url" class="form-control" id="videoUrl" placeholder="https://tiktok.com/@user/video/123">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="searchKeywords" class="form-label">🔍 Arama Anahtar Kelimeleri</label>
+                                <input type="text" class="form-control" id="searchKeywords" placeholder="Trend konular, müzik">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="followerRange" class="form-label">👥 Takipçi Aralığı</label>
+                                <select class="form-select" id="followerRange">
+                                    <option value="">Tüm Hesaplar</option>
+                                    <option value="1000+">1K+ Takipçi</option>
+                                    <option value="10000+">10K+ Takipçi</option>
+                                    <option value="100000+">100K+ Takipçi</option>
+                                    <option value="1000000+">1M+ Takipçi</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="videoType" class="form-label">🎬 Video Türü</label>
+                                <select class="form-select" id="videoType">
+                                    <option value="">Tüm Videolar</option>
+                                    <option value="trending">Trend</option>
+                                    <option value="viral">Viral</option>
+                                    <option value="music">Müzik</option>
+                                    <option value="dance">Dans</option>
+                                    <option value="comedy">Komedi</option>
+                                    <option value="educational">Eğitici</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="duration" class="form-label">⏱️ Video Süresi</label>
+                                <select class="form-select" id="duration">
+                                    <option value="">Tüm Süreler</option>
+                                    <option value="short">Kısa (15s altı)</option>
+                                    <option value="medium">Orta (15-60s)</option>
+                                    <option value="long">Uzun (60s üstü)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fab fa-tiktok"></i> TikTok Scraping Başlat
+                    </button>
+                </form>
+                
+                <div class="mt-3">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> TikTok Scraping Nasıl Çalışır?</h6>
+                        <ol>
+                            <li>Kullanıcı adı, hashtag, video URL'si veya arama kriterleri girin</li>
+                            <li>Takipçi aralığı, video türü ve süre filtrelerini seçin</li>
+                            <li>Sonuçlar aşağıdaki tabloda görünür</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <p class="mt-2">TikTok verileri toplanıyor...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TikTok Data -->
+        <div class="card">
+            <div class="card-header tiktok-gradient">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fab fa-tiktok"></i> TikTok Verileri</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Excel İndir
+                        </button>
+                        <button class="btn btn-sm btn-light" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Yenile
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <div id="tiktokDataContainer" class="p-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Kullanıcı Adı</th>
+                                    <th>Ad</th>
+                                    <th>Takipçi</th>
+                                    <th>Beğeni</th>
+                                    <th>Video</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in tiktok_data %}
+                                <tr>
+                                    <td><strong>@{{ data.username|default:"unknown" }}</strong></td>
+                                    <td>{{ data.display_name|default:"Bilinmiyor" }}</td>
+                                    <td>{{ data.followers_count|human_readable_number|default:"0" }}</td>
+                                    <td>{{ data.likes_count|human_readable_number|default:"0" }}</td>
+                                    <td>{{ data.videos_count|human_readable_number|default:"0" }}</td>
+                                    <td>
+                                        {% if data.is_verified %}
+                                            <span class="badge bg-success">✓ Doğrulanmış</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fab fa-tiktok fa-2x mb-2"></i><br>
+                                        Henüz TikTok verisi yok
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('tiktokScrapingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const hashtag = document.getElementById('hashtag').value;
+    const videoUrl = document.getElementById('videoUrl').value;
+    const searchKeywords = document.getElementById('searchKeywords').value;
+    const followerRange = document.getElementById('followerRange').value;
+    const videoType = document.getElementById('videoType').value;
+    const duration = document.getElementById('duration').value;
+    
+    if (!username && !hashtag && !videoUrl && !searchKeywords) {
+        alert('Lütfen kullanıcı adı, hashtag, video URL\'si veya arama kriterleri girin.');
+        return;
+    }
+    
+    document.getElementById('loading').style.display = 'block';
+    
+    fetch('{% url "trigger_tiktok_scraper" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            username: username,
+            hashtag: hashtag,
+            video_url: videoUrl,
+            search_keywords: searchKeywords,
+            follower_range: followerRange,
+            video_type: videoType,
+            duration: duration
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        
+        if (data.success) {
+            showNotification('TikTok scraping başlatıldı!', 'success');
+            this.reset();
+        } else {
+            showNotification('Hata: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading').style.display = 'none';
+        showNotification('Bir hata oluştu: ' + error.message, 'error');
+    });
+});
+
+function refreshData() {
+    fetch('{% url "get_tiktok_data" %}')
+    .then(response => response.json())
+    .then(data => {
+        showNotification('TikTok verileri yenilendi', 'info');
+    })
+    .catch(error => {
+        showNotification('Veri yenileme hatası: ' + error.message, 'error');
+    });
+}
+
+function exportToExcel() {
+    showNotification('Excel indirme özelliği yakında...', 'info');
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = message + '<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>';
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

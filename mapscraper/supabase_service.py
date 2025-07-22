@@ -43,33 +43,131 @@ class SupabaseService:
     def get_map_data(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
         """
         Supabase'den map verilerini çeker
-        
-        Args:
-            limit: Çekilecek maksimum veri sayısı
-            offset: Kaç kaydı atla
-            
-        Returns:
-            List[Dict]: Map data listesi
         """
+        if not self.is_connected():
+            return []
+        try:
+            try:
+                query = self.supabase.table('map_data').select('*')
+                if limit > 0:
+                    query = query.limit(limit)
+                if offset > 0:
+                    query = query.offset(offset)
+                query = query.order('created_at', desc=True)
+                response = query.execute()
+                return response.data
+            except Exception as e:
+                # Eski tablo ismiyle dene
+                query = self.supabase.table('mapscraper_mapdata').select('*')
+                if limit > 0:
+                    query = query.limit(limit)
+                if offset > 0:
+                    query = query.offset(offset)
+                query = query.order('created_at', desc=True)
+                response = query.execute()
+                return response.data
+        except Exception as e:
+            print(f"Supabase'den map verisi çekerken hata: {e}")
+            return []
+
+    def get_instagram_data(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Instagram verilerini Supabase'den çeker"""
         if not self.is_connected():
             return []
         
         try:
-            query = self.supabase.table('mapscraper_mapdata').select('*')
+            query = self.supabase.table('instagram_data').select('*')
             
-            # Limit ve offset uygula
             if limit > 0:
                 query = query.limit(limit)
             if offset > 0:
                 query = query.offset(offset)
                 
-            # Sıralama ekle (en yeni önce)
             query = query.order('created_at', desc=True)
-            
             response = query.execute()
             return response.data
         except Exception as e:
-            print(f"Supabase'den veri çekerken hata: {e}")
+            print(f"Supabase'den Instagram verisi çekerken hata: {e}")
+            return []
+
+    def get_facebook_data(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Facebook verilerini Supabase'den çeker"""
+        if not self.is_connected():
+            return []
+        
+        try:
+            query = self.supabase.table('facebook_data').select('*')
+            
+            if limit > 0:
+                query = query.limit(limit)
+            if offset > 0:
+                query = query.offset(offset)
+                
+            query = query.order('created_at', desc=True)
+            response = query.execute()
+            return response.data
+        except Exception as e:
+            print(f"Supabase'den Facebook verisi çekerken hata: {e}")
+            return []
+
+    def get_twitter_data(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Twitter verilerini Supabase'den çeker"""
+        if not self.is_connected():
+            return []
+        
+        try:
+            query = self.supabase.table('twitter_data').select('*')
+            
+            if limit > 0:
+                query = query.limit(limit)
+            if offset > 0:
+                query = query.offset(offset)
+                
+            query = query.order('created_at', desc=True)
+            response = query.execute()
+            return response.data
+        except Exception as e:
+            print(f"Supabase'den Twitter verisi çekerken hata: {e}")
+            return []
+
+    def get_linkedin_data(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """LinkedIn verilerini Supabase'den çeker"""
+        if not self.is_connected():
+            return []
+        
+        try:
+            query = self.supabase.table('linkedin_data').select('*')
+            
+            if limit > 0:
+                query = query.limit(limit)
+            if offset > 0:
+                query = query.offset(offset)
+                
+            query = query.order('created_at', desc=True)
+            response = query.execute()
+            return response.data
+        except Exception as e:
+            print(f"Supabase'den LinkedIn verisi çekerken hata: {e}")
+            return []
+
+    def get_tiktok_data(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """TikTok verilerini Supabase'den çeker"""
+        if not self.is_connected():
+            return []
+        
+        try:
+            query = self.supabase.table('tiktok_data').select('*')
+            
+            if limit > 0:
+                query = query.limit(limit)
+            if offset > 0:
+                query = query.offset(offset)
+                
+            query = query.order('created_at', desc=True)
+            response = query.execute()
+            return response.data
+        except Exception as e:
+            print(f"Supabase'den TikTok verisi çekerken hata: {e}")
             return []
     
     def insert_map_data(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -314,6 +412,146 @@ class SupabaseService:
                 'updated': 0,
                 'failed': len(data_list)
             }
+
+    # Instagram Data Methods
+    def get_instagram_data(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Supabase'den Instagram verilerini çeker"""
+        if not self.is_connected():
+            return []
+        try:
+            response = self.supabase.table('instagram_data').select('*').range(offset, offset + limit - 1).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Instagram verileri alınırken hata: {e}")
+            return []
+
+    def upsert_instagram_data(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Instagram verilerini Supabase'e upsert eder"""
+        if not self.is_connected():
+            return {'success': False, 'error': 'Supabase bağlantısı yok'}
+        
+        try:
+            response = self.supabase.table('instagram_data').upsert(data_list, on_conflict='username').execute()
+            return {
+                'success': True,
+                'upserted_count': len(response.data) if response.data else 0,
+                'data': response.data
+            }
+        except Exception as e:
+            print(f"Instagram upsert hatası: {e}")
+            return {'success': False, 'error': str(e)}
+
+    # Facebook Data Methods
+    def get_facebook_data(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Supabase'den Facebook verilerini çeker"""
+        if not self.is_connected():
+            return []
+        try:
+            response = self.supabase.table('facebook_data').select('*').range(offset, offset + limit - 1).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Facebook verileri alınırken hata: {e}")
+            return []
+
+    def upsert_facebook_data(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Facebook verilerini Supabase'e upsert eder"""
+        if not self.is_connected():
+            return {'success': False, 'error': 'Supabase bağlantısı yok'}
+        
+        try:
+            response = self.supabase.table('facebook_data').upsert(data_list, on_conflict='page_name').execute()
+            return {
+                'success': True,
+                'upserted_count': len(response.data) if response.data else 0,
+                'data': response.data
+            }
+        except Exception as e:
+            print(f"Facebook upsert hatası: {e}")
+            return {'success': False, 'error': str(e)}
+
+    # Twitter Data Methods
+    def get_twitter_data(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Supabase'den Twitter verilerini çeker"""
+        if not self.is_connected():
+            return []
+        try:
+            response = self.supabase.table('twitter_data').select('*').range(offset, offset + limit - 1).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Twitter verileri alınırken hata: {e}")
+            return []
+
+    def upsert_twitter_data(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Twitter verilerini Supabase'e upsert eder"""
+        if not self.is_connected():
+            return {'success': False, 'error': 'Supabase bağlantısı yok'}
+        
+        try:
+            response = self.supabase.table('twitter_data').upsert(data_list, on_conflict='username').execute()
+            return {
+                'success': True,
+                'upserted_count': len(response.data) if response.data else 0,
+                'data': response.data
+            }
+        except Exception as e:
+            print(f"Twitter upsert hatası: {e}")
+            return {'success': False, 'error': str(e)}
+
+    # LinkedIn Data Methods
+    def get_linkedin_data(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Supabase'den LinkedIn verilerini çeker"""
+        if not self.is_connected():
+            return []
+        try:
+            response = self.supabase.table('linkedin_data').select('*').range(offset, offset + limit - 1).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"LinkedIn verileri alınırken hata: {e}")
+            return []
+
+    def upsert_linkedin_data(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """LinkedIn verilerini Supabase'e upsert eder"""
+        if not self.is_connected():
+            return {'success': False, 'error': 'Supabase bağlantısı yok'}
+        
+        try:
+            response = self.supabase.table('linkedin_data').upsert(data_list, on_conflict='profile_name').execute()
+            return {
+                'success': True,
+                'upserted_count': len(response.data) if response.data else 0,
+                'data': response.data
+            }
+        except Exception as e:
+            print(f"LinkedIn upsert hatası: {e}")
+            return {'success': False, 'error': str(e)}
+
+    # TikTok Data Methods
+    def get_tiktok_data(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Supabase'den TikTok verilerini çeker"""
+        if not self.is_connected():
+            return []
+        try:
+            response = self.supabase.table('tiktok_data').select('*').range(offset, offset + limit - 1).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"TikTok verileri alınırken hata: {e}")
+            return []
+
+    def upsert_tiktok_data(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """TikTok verilerini Supabase'e upsert eder"""
+        if not self.is_connected():
+            return {'success': False, 'error': 'Supabase bağlantısı yok'}
+        
+        try:
+            response = self.supabase.table('tiktok_data').upsert(data_list, on_conflict='username').execute()
+            return {
+                'success': True,
+                'upserted_count': len(response.data) if response.data else 0,
+                'data': response.data
+            }
+        except Exception as e:
+            print(f"TikTok upsert hatası: {e}")
+            return {'success': False, 'error': str(e)}
 
 
 # Global Supabase service instance

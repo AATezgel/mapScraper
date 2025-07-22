@@ -1,39 +1,14 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Map Scraper - Map Scraper{% endblock %}
 
 {% block extra_css %}
 <style>
-    body {
-        background-color: #f8f9fa;
-    }
-    .sidebar {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 0;
-        position: fixed;
-        width: 250px;
-        z-index: 1000;
-    }
-    .sidebar .nav-link {
-        color: white;
-        padding: 15px 20px;
-        border-radius: 0;
-        transition: all 0.3s ease;
-    }
-    .sidebar .nav-link:hover {
-        background-color: rgba(255,255,255,0.1);
-        color: white;
-    }
-    .sidebar .nav-link.active {
-        background-color: rgba(255,255,255,0.2);
-        color: white;
-    }
-    .main-content {
-        margin-left: 250px;
+    .map-container {
+        max-width: 1400px;
+        margin: 0 auto;
         padding: 20px;
-        min-height: 100vh;
-        width: calc(100% - 250px);
     }
     .header {
         background: white;
@@ -406,6 +381,19 @@
     
     /* Responsive iyileştirmeleri */
     @media (max-width: 768px) {
+        .map-container {
+            padding: 10px;
+        }
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            width: 250px;
+            position: fixed;
+            z-index: 1050;
+        }
+        .sidebar.show {
+            transform: translateX(0);
+        }
         #columnSelector .row > div {
             margin-bottom: 1rem;
         }
@@ -431,51 +419,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="brand">
-            <h4><i class="fas fa-map-marker-alt"></i> Map Scraper</h4>
-        </div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'dashboard' %}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="{% url 'map_scraper' %}">
-                    <i class="fas fa-map"></i> Map Scraper
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'settings' %}">
-                    <i class="fas fa-cog"></i> Ayarlar
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i> Çıkış
-                </a>
-            </li>
-        </ul>
-    </nav>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <button class="btn btn-primary d-md-none me-2" type="button" onclick="document.querySelector('.sidebar').classList.toggle('show')">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h2>Map Scraper</h2>
-                </div>
-                <div>
-                    <span class="text-muted">Hoş geldiniz, {{ user.username }}!</span>
-                </div>
+<div class="map-container">
+    <div class="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-primary d-md-none me-2" type="button" onclick="document.querySelector('.sidebar').classList.toggle('show')">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2>Map Scraper</h2>
+            </div>
+            <div>
+                <span class="text-muted">Hoş geldiniz, {{ user.username }}!</span>
             </div>
         </div>
+    </div>
         
         <!-- Scraping Form -->
         <div class="card">
@@ -483,7 +440,6 @@
                 <h5 class="mb-0">Veri Kaynağı Seçimi</h5>
             </div>
             <div class="card-body">
-                <!-- N8N Workflow Formu -->
                 <form id="scrapingForm">
                     {% csrf_token %}
                     <div class="row">
@@ -499,7 +455,6 @@
                     </button>
                 </form>
                 
-                <!-- N8N Yardım -->
                 <div class="mt-3">
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle"></i> Scraping Nasıl Çalışır?</h6>
@@ -538,6 +493,9 @@
                         </div>
                         <button class="btn btn-sm btn-secondary" onclick="toggleColumnSelector()" id="columnSelectorBtn" style="display: none;">
                             <i class="fas fa-columns"></i> Sütunlar
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Excel İndir
                         </button>
                         <button class="btn btn-sm btn-primary" onclick="refreshMapData()">
                             <i class="fas fa-sync-alt"></i> Yenile
@@ -725,11 +683,48 @@
                 
                 <!-- Veri Container -->
                 <div id="mapDataContainer" class="p-3">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Yükleniyor...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Veriler yükleniyor...</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>İşletme Adı</th>
+                                    <th>Kategori</th>
+                                    <th>Puan</th>
+                                    <th>Yorum</th>
+                                    <th>Telefon</th>
+                                    <th>Adres</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in map_data %}
+                                <tr>
+                                    <td><strong>{{ data.name|default:"Bilinmiyor" }}</strong></td>
+                                    <td>{{ data.category|default:"Genel" }}</td>
+                                    <td>{{ data.rating|default:"0" }} ⭐</td>
+                                    <td>{{ data.reviews_count|human_readable_number|default:"0" }}</td>
+                                    <td>{{ data.phone|default:"Yok" }}</td>
+                                    <td>{{ data.address|default:"Bilinmiyor" }}</td>
+                                    <td>
+                                        {% if data.is_open %}
+                                            <span class="badge bg-success">Açık</span>
+                                        {% elif data.is_open == False %}
+                                            <span class="badge bg-danger">Kapalı</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Bilinmiyor</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-map-marker-alt fa-2x mb-2"></i><br>
+                                        Henüz map verisi yok
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 
@@ -793,7 +788,6 @@ document.getElementById('scrapingForm').addEventListener('submit', function(e) {
     // Kart başlığını güncelle
     updateDataCardTitle(`Scraping Verileri - "${query}"`);
     
-    // Ayarlardan webhook URL'ini al ve N8N tetikle
     fetch('{% url "trigger_n8n" %}', {
         method: 'POST',
         headers: {
@@ -1510,6 +1504,55 @@ function clearDetailedFilters() {
     renderData();
     renderPagination();
     updateStats();
+}
+
+// Excel indirme fonksiyonu
+function exportToExcel() {
+    if (filteredData.length === 0) {
+        showNotification('İndirilecek veri bulunamadı!', 'warning');
+        return;
+    }
+    
+    // CSV formatında veri hazırla
+    const headers = ['İşletme Adı', 'Adres', 'Telefon', 'Puan', 'Yorum Sayısı', 'Kategori', 'Website', 'Enlem', 'Boylam', 'Tarih'];
+    const csvContent = [headers.join(',')];
+    
+    filteredData.forEach(function(item) {
+        const row = [
+            `"${(item.name || '').replace(/"/g, '""')}"`,
+            `"${(item.address || '').replace(/"/g, '""')}"`,
+            `"${item.phone || ''}"`,
+            item.rating || '',
+            item.reviews_count || '',
+            `"${(item.category || '').replace(/"/g, '""')}"`,
+            `"${item.website || ''}"`,
+            item.latitude || '',
+            item.longitude || '',
+            item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : ''
+        ];
+        csvContent.push(row.join(','));
+    });
+    
+    // BOM ekleme (Türkçe karakterler için)
+    const csv = '\uFEFF' + csvContent.join('\n');
+    
+    // İndirme linki oluştur
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `map_scraper_data_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification(`${filteredData.length} veri Excel formatında indirildi!`, 'success');
+    } else {
+        showNotification('Tarayıcınız dosya indirmeyi desteklemiyor!', 'error');
+    }
 }
 </script>
 {% endblock %}

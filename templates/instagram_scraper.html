@@ -1,0 +1,691 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Instagram Scraper - Scraper App{% endblock %}
+
+{% block extra_css %}
+<style>
+    .instagram-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .header {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    .brand {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .brand h4 {
+        color: white;
+        margin: 0;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+    }
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    .table-responsive {
+        max-height: 80vh;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    .table th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Instagram theme colors */
+    .instagram-gradient {
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+    }
+    
+    .instagram-card .card-header {
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+    }
+    
+    .verified-badge {
+        color: #1da1f2;
+    }
+    
+    .followers-badge {
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 100%);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    
+    .engagement-badge {
+        background: linear-gradient(135deg, #fcb045 0%, #fd1d1d 100%);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .instagram-container {
+            padding: 10px;
+        }
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            width: 250px;
+            position: fixed;
+            z-index: 1050;
+        }
+        .sidebar.show {
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="instagram-container">
+    <div class="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-primary d-md-none me-2" type="button" onclick="document.querySelector('.sidebar').classList.toggle('show')">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2><i class="fab fa-instagram"></i> Instagram Scraper</h2>
+            </div>
+            <div>
+                <span class="text-muted">Hoş geldiniz, {{ user.username }}!</span>
+            </div>
+        </div>
+    </div>
+        
+        <!-- Scraping Form -->
+        <div class="card instagram-card">
+            <div class="card-header">
+                <h5 class="mb-0">Instagram Veri Toplama</h5>
+            </div>
+            <div class="card-body">
+                <form id="instagramScrapingForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label for="username" class="form-label">Instagram Kullanıcı Adı veya Hashtag</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Örn: @username, #hashtag, kullaniciadi" required>
+                            <small class="form-text text-muted">
+                                Kullanıcı adı (@ ile veya olmadan), hashtag (# ile) veya profil URL'si girebilirsiniz
+                            </small>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fab fa-instagram"></i> Instagram Scraping Başlat
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="mt-3">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Instagram Scraping Nasıl Çalışır?</h6>
+                        <ol>
+                            <li>Instagram kullanıcı adı, hashtag veya profil URL'si girin</li>
+                            <li>Profil bilgileri, takipçi sayısı, gönderi sayısı gibi veriler toplanır</li>
+                            <li>Sonuçlar gerçek zamanlı olarak aşağıdaki tabloda görünür</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <p class="mt-2">Instagram verileri toplanıyor...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instagram Data -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fab fa-instagram"></i> Instagram Verileri</h5>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary active" onclick="toggleView('cards')" id="cardsViewBtn">
+                                <i class="fas fa-th-large"></i> Kartlar
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleView('table')" id="tableViewBtn">
+                                <i class="fas fa-table"></i> Tablo
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-success" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Excel İndir
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="refreshInstagramData()">
+                            <i class="fas fa-sync-alt"></i> Yenile
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="getInstagramStats()">
+                            <i class="fas fa-chart-bar"></i> İstatistikler
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtreler -->
+                <div class="mt-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control form-control-sm" id="searchInput" 
+                                   placeholder="🔍 Kullanıcı adı veya tam ad ara..." onkeyup="filterData()">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" id="categoryFilter" onchange="filterData()">
+                                <option value="">📂 Tüm Kategoriler</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm" id="followersFilter" onchange="filterData()">
+                                <option value="">👥 Tüm Takipçi Aralıkları</option>
+                                <option value="1M+">1M+ Takipçi</option>
+                                <option value="100K+">100K+ Takipçi</option>
+                                <option value="10K+">10K+ Takipçi</option>
+                                <option value="1K+">1K+ Takipçi</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select form-select-sm" id="sortBy" onchange="sortData()">
+                                <option value="newest">🕒 En Yeni</option>
+                                <option value="oldest">🕒 En Eski</option>
+                                <option value="username">🔤 Kullanıcı Adı</option>
+                                <option value="followers">👥 Takipçi Sayısı</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <!-- İstatistik Bilgileri -->
+                <div class="px-3 py-2 bg-light border-bottom">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <small class="text-muted">Toplam Profil</small>
+                            <div class="fw-bold text-primary" id="totalCount">-</div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Görüntülenen</small>
+                            <div class="fw-bold text-info" id="displayedCount">-</div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Sayfa</small>
+                            <div class="fw-bold text-warning" id="currentPageInfo">-</div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Son Güncelleme</small>
+                            <div class="fw-bold text-success" id="lastUpdate">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Veri Container -->
+                <div id="instagramDataContainer" class="p-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Kullanıcı Adı</th>
+                                    <th>Tam Ad</th>
+                                    <th>Takipçi</th>
+                                    <th>Takip Edilen</th>
+                                    <th>Gönderi</th>
+                                    <th>Durum</th>
+                                    <th>Kategori</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in instagram_data %}
+                                <tr>
+                                    <td><strong>@{{ data.username|default:"unknown" }}</strong></td>
+                                    <td>{{ data.full_name|default:"Bilinmiyor" }}</td>
+                                    <td>{{ data.followers_count|human_readable_number|default:"0" }}</td>
+                                    <td>{{ data.following_count|human_readable_number|default:"0" }}</td>
+                                    <td>{{ data.posts_count|human_readable_number|default:"0" }}</td>
+                                    <td>
+                                        {% if data.is_verified %}
+                                            <span class="badge bg-primary">✓ Doğrulanmış</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ data.category|default:"Genel" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fab fa-instagram fa-2x mb-2"></i><br>
+                                        Henüz Instagram verisi yok
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Sayfalama -->
+                <div class="px-3 py-2 bg-light border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <select class="form-select form-select-sm" id="itemsPerPage" onchange="changeItemsPerPage()" style="width: auto;">
+                                <option value="10">10 öğe</option>
+                                <option value="20" selected>20 öğe</option>
+                                <option value="50">50 öğe</option>
+                                <option value="100">100 öğe</option>
+                            </select>
+                        </div>
+                        <nav aria-label="Sayfa navigasyonu">
+                            <ul class="pagination pagination-sm mb-0" id="pagination">
+                                <!-- Sayfalama butonları buraya eklenecek -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global değişkenler
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+let itemsPerPage = 20;
+let currentView = 'cards';
+
+// Sayfa yüklendiğinde verileri yükle
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Instagram Scraper sayfası yüklendi');
+    refreshInstagramData();
+});
+
+// Form submit
+document.getElementById('instagramScrapingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    
+    if (!username) {
+        alert('Lütfen Instagram kullanıcı adı girin.');
+        return;
+    }
+    
+    // Loading göster
+    document.getElementById('loading').style.display = 'block';
+    
+    // API'ye gönder (placeholder - gerçek API endpoint'i eklenecek)
+    fetch('/api/trigger-instagram-scraper/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            username: username
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        
+        if (data.success) {
+            showNotification(`"${username}" için Instagram scraping başlatıldı!`, 'success');
+            document.getElementById('username').value = '';
+        } else {
+            showNotification('Hata: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading').style.display = 'none';
+        showNotification('Bir hata oluştu: ' + error.message, 'error');
+    });
+});
+
+function refreshInstagramData() {
+    console.log('Instagram verileri yenileniyor...');
+    
+    // Show loading
+    const container = document.getElementById('instagramDataContainer');
+    if (container) {
+        container.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Veriler yükleniyor...</div>';
+    }
+    
+    // Fetch real data from API
+    fetch('/api/instagram-data/')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Instagram data loaded:', data);
+            allData = data.data || [];
+            filterData();
+        })
+        .catch(error => {
+            console.error('Error loading Instagram data:', error);
+            // Fallback to sample data if API fails
+            allData = [
+                {
+                    username: 'example_user',
+                    full_name: 'Example User', 
+                    bio: 'This is an example bio for testing purposes.',
+                    followers_count: 125000,
+                    following_count: 567,
+                    posts_count: 1234,
+                    is_verified: true,
+                    is_private: false,
+                    category: 'Influencer',
+                    created_at: '2024-01-15T10:30:00Z'
+                }
+            ];
+            filterData();
+        });
+}
+
+function filterData() {
+    const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+    const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+    const followersFilter = document.getElementById('followersFilter')?.value || '';
+    
+    filteredData = allData.filter(item => {
+        const matchesSearch = !searchTerm || 
+            (item.username && item.username.toLowerCase().includes(searchTerm)) ||
+            (item.full_name && item.full_name.toLowerCase().includes(searchTerm));
+            
+        const matchesCategory = !categoryFilter || item.category === categoryFilter;
+        
+        let matchesFollowers = true;
+        if (followersFilter) {
+            const followers = item.followers_count || 0;
+            switch(followersFilter) {
+                case '1M+': matchesFollowers = followers >= 1000000; break;
+                case '100K+': matchesFollowers = followers >= 100000; break;
+                case '10K+': matchesFollowers = followers >= 10000; break;
+                case '1K+': matchesFollowers = followers >= 1000; break;
+            }
+        }
+            
+        return matchesSearch && matchesCategory && matchesFollowers;
+    });
+    
+    currentPage = 1;
+    renderData();
+    renderPagination();
+    updateStats();
+}
+
+function renderData() {
+    const container = document.getElementById('instagramDataContainer');
+    if (!container) return;
+    
+    if (filteredData.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fab fa-instagram fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Instagram verisi bulunamadı</h5>
+                <p class="text-muted">Arama kriterlerinizi değiştirin veya yeni scraping başlatın.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageData = filteredData.slice(startIndex, endIndex);
+    
+    let html = '';
+    
+    if (currentView === 'cards') {
+        html = '<div class="row">';
+        pageData.forEach(function(item) {
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <h6 class="card-title mb-0">@${item.username || 'unknown'}</h6>
+                                ${item.is_verified ? '<i class="fas fa-check-circle verified-badge ms-2"></i>' : ''}
+                            </div>
+                            <p class="text-muted small">${item.full_name || 'İsim yok'}</p>
+                            <p class="text-muted small">${item.bio ? item.bio.substring(0, 100) + '...' : 'Bio yok'}</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="followers-badge">${formatNumber(item.followers_count || 0)} takipçi</span>
+                                <span class="engagement-badge">${item.posts_count || 0} gönderi</span>
+                            </div>
+                            ${item.category ? `<span class="badge bg-secondary mt-2">${item.category}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    } else {
+        html = `
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı Adı</th>
+                            <th>Tam Ad</th>
+                            <th>Takipçi</th>
+                            <th>Takip</th>
+                            <th>Gönderi</th>
+                            <th>Durum</th>
+                            <th>Kategori</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        pageData.forEach(function(item) {
+            html += `
+                <tr>
+                    <td>
+                        <strong>@${item.username || 'unknown'}</strong>
+                        ${item.is_verified ? '<i class="fas fa-check-circle verified-badge ms-1"></i>' : ''}
+                    </td>
+                    <td>${item.full_name || '-'}</td>
+                    <td><span class="followers-badge">${formatNumber(item.followers_count || 0)}</span></td>
+                    <td>${formatNumber(item.following_count || 0)}</td>
+                    <td>${formatNumber(item.posts_count || 0)}</td>
+                    <td>
+                        ${item.is_private ? '<span class="badge bg-warning">Özel</span>' : '<span class="badge bg-success">Açık</span>'}
+                    </td>
+                    <td>${item.category ? `<span class="badge bg-secondary">${item.category}</span>` : '-'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+    }
+    
+    container.innerHTML = html;
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+}
+
+function toggleView(view) {
+    currentView = view;
+    
+    const tableBtn = document.getElementById('tableViewBtn');
+    const cardsBtn = document.getElementById('cardsViewBtn');
+    
+    if (view === 'table') {
+        tableBtn.classList.add('active');
+        cardsBtn.classList.remove('active');
+    } else {
+        cardsBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+    }
+    
+    renderData();
+}
+
+function exportToExcel() {
+    if (filteredData.length === 0) {
+        showNotification('İndirilecek veri bulunamadı!', 'warning');
+        return;
+    }
+    
+    const headers = ['Kullanıcı Adı', 'Tam Ad', 'Bio', 'Takipçi Sayısı', 'Takip Sayısı', 'Gönderi Sayısı', 'Doğrulanmış', 'Özel', 'Kategori', 'Tarih'];
+    const csvContent = [headers.join(',')];
+    
+    filteredData.forEach(function(item) {
+        const row = [
+            `"${item.username || ''}"`,
+            `"${(item.full_name || '').replace(/"/g, '""')}"`,
+            `"${(item.bio || '').replace(/"/g, '""')}"`,
+            item.followers_count || 0,
+            item.following_count || 0,
+            item.posts_count || 0,
+            item.is_verified ? 'Evet' : 'Hayır',
+            item.is_private ? 'Evet' : 'Hayır',
+            `"${item.category || ''}"`,
+            item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : ''
+        ];
+        csvContent.push(row.join(','));
+    });
+    
+    const csv = '\uFEFF' + csvContent.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `instagram_data_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification(`${filteredData.length} Instagram verisi Excel formatında indirildi!`, 'success');
+    }
+}
+
+function getInstagramStats() {
+    showNotification('Instagram istatistikleri hazırlanıyor...', 'info');
+}
+
+function sortData() {
+    const sortBy = document.getElementById('sortBy').value;
+    
+    switch(sortBy) {
+        case 'newest':
+            filteredData.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            break;
+        case 'oldest':
+            filteredData.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+            break;
+        case 'username':
+            filteredData.sort((a, b) => (a.username || '').localeCompare(b.username || ''));
+            break;
+        case 'followers':
+            filteredData.sort((a, b) => (b.followers_count || 0) - (a.followers_count || 0));
+            break;
+    }
+    
+    currentPage = 1;
+    renderData();
+    renderPagination();
+    updateStats();
+}
+
+function renderPagination() {
+    // Pagination implementation
+}
+
+function changePage(page) {
+    // Page change implementation
+}
+
+function changeItemsPerPage() {
+    // Items per page implementation
+}
+
+function updateStats() {
+    const totalCount = allData.length;
+    const displayedCount = filteredData.length;
+    const totalPages = Math.ceil(displayedCount / itemsPerPage);
+    
+    document.getElementById('totalCount').textContent = totalCount.toLocaleString('tr-TR');
+    document.getElementById('displayedCount').textContent = displayedCount.toLocaleString('tr-TR');
+    document.getElementById('currentPageInfo').textContent = `${currentPage}/${totalPages || 1}`;
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('tr-TR');
+}
+
+function showNotification(message, type) {
+    if (!type) type = 'info';
+    
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-' + type + ' position-fixed';
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = message +
+        '<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>';
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
