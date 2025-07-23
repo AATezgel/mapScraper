@@ -110,16 +110,6 @@
         .instagram-container {
             padding: 10px;
         }
-        .sidebar {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            width: 250px;
-            position: fixed;
-            z-index: 1050;
-        }
-        .sidebar.show {
-            transform: translateX(0);
-        }
     }
 </style>
 {% endblock %}
@@ -129,9 +119,6 @@
     <div class="header">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <button class="btn btn-primary d-md-none me-2" type="button" onclick="document.querySelector('.sidebar').classList.toggle('show')">
-                    <i class="fas fa-bars"></i>
-                </button>
                 <h2><i class="fab fa-instagram"></i> Instagram Scraper</h2>
             </div>
             <div>
@@ -399,19 +386,46 @@ function refreshInstagramData() {
     // Show loading
     const container = document.getElementById('instagramDataContainer');
     if (container) {
-        container.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Veriler yükleniyor...</div>';
+        container.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Yükleniyor...</span></div><p class="mt-2">Yeni veriler yükleniyor...</p></div>';
     }
     
-    // Fetch real data from API
-    fetch('/api/instagram-data/')
-        .then(response => response.json())
+    // Fetch fresh data from API with cache-busting
+    const timestamp = new Date().getTime();
+    fetch(`/api/instagram-data/?t=${timestamp}`, {
+        method: 'GET',
+        headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            console.log('Instagram data loaded:', data);
-            allData = data.data || [];
-            filterData();
+            console.log('Instagram data refreshed:', data);
+            if (data.success) {
+                allData = data.data || [];
+                console.log(`${allData.length} Instagram verisi yüklendi`);
+                
+                // Show success message
+                showNotification(`${allData.length} Instagram verisi başarıyla yenilendi!`, 'success');
+                
+                // Update the display
+                filterData();
+            } else {
+                console.error('API error:', data.error);
+                showNotification('Veri yenileme hatası: ' + data.error, 'error');
+                // Fallback to existing data
+                filterData();
+            }
         })
         .catch(error => {
             console.error('Error loading Instagram data:', error);
+            showNotification('Veri yenileme hatası: ' + error.message, 'error');
+            
             // Fallback to sample data if API fails
             allData = [
                 {
@@ -424,7 +438,8 @@ function refreshInstagramData() {
                     is_verified: true,
                     is_private: false,
                     category: 'Influencer',
-                    created_at: '2024-01-15T10:30:00Z'
+                    created_at: '2024-01-15T10:30:00Z',
+                    source: 'Fallback'
                 }
             ];
             filterData();

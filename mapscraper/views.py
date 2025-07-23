@@ -807,17 +807,17 @@ def settings_view(request):
 @login_required
 def instagram_scraper_view(request):
     """Instagram Scraper sayfası"""
-    # Supabase'den Instagram verilerini çek
-    instagram_data = supabase_service.get_instagram_data(limit=50)
+    instagram_data = []
     
-    # Eğer Supabase'den veri gelmezse Django ORM'den fallback
-    if not instagram_data:
-        try:
-            from .models import InstagramData
-            instagram_data = list(InstagramData.objects.all()[:50].values())
-        except Exception as e:
-            print(f"Instagram Django ORM'den veri alınamadı: {e}")
-            instagram_data = []
+    # Sadece Supabase'den Instagram verilerini çek
+    try:
+        supabase_data = supabase_service.supabase.table('instagram_data').select('*').limit(50).execute()
+        instagram_data = supabase_data.data if supabase_data.data else []
+        print(f"Supabase'den {len(instagram_data)} Instagram verisi alındı")
+    except Exception as e:
+        print(f"Instagram Supabase error: {e}")
+    
+    print(f"Toplam {len(instagram_data)} Instagram verisi sayfa yüklemede kullanılıyor")
     
     context = {
         'instagram_data': instagram_data,
@@ -1193,34 +1193,41 @@ def trigger_tiktok_scraper(request):
 @login_required
 @require_http_methods(["GET"])
 def get_instagram_data(request):
-    """Instagram verilerini getir"""
+    """Instagram verilerini getir (Sadece Supabase)"""
     try:
-        from .models import InstagramData
-        
-        instagram_data = InstagramData.objects.all()
         data = []
         
-        for item in instagram_data:
-            data.append({
-                'id': item.id,
-                'username': item.username,
-                'full_name': item.full_name,
-                'bio': item.bio,
-                'followers_count': item.followers_count,
-                'following_count': item.following_count,
-                'posts_count': item.posts_count,
-                'is_verified': item.is_verified,
-                'category': item.category,
-                'created_at': item.created_at.isoformat() if item.created_at else None
-            })
+        # Sadece Supabase'den veri çek
+        try:
+            supabase_data = supabase_service.supabase.table('instagram_data').select('*').execute()
+            
+            for item in supabase_data.data:
+                data.append({
+                    'id': f"supabase_{item.get('id')}",
+                    'username': item.get('username'),
+                    'full_name': item.get('full_name'),
+                    'bio': item.get('bio'),
+                    'followers_count': item.get('followers_count'),
+                    'following_count': item.get('following_count'),
+                    'posts_count': item.get('posts_count'),
+                    'is_verified': item.get('is_verified'),
+                    'category': item.get('category'),
+                    'created_at': item.get('created_at'),
+                    'source': 'Supabase'
+                })
+                
+            print(f"Supabase'den {len(supabase_data.data)} Instagram verisi alındı")
+        except Exception as e:
+            print(f"Supabase Instagram data error: {e}")
         
         return JsonResponse({
             'success': True,
             'data': data,
             'count': len(data),
-            'message': f'{len(data)} Instagram verisi bulundu'
+            'message': f'{len(data)} Instagram verisi bulundu (Sadece Supabase)'
         })
     except Exception as e:
+        print(f"get_instagram_data error: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
