@@ -161,42 +161,21 @@
 
     <!-- Settings Grid -->
     <div class="settings-grid">
-        <!-- Supabase Ayarları -->
+        <!-- Database Bilgileri -->
         <div class="settings-section">
-            <h5><i class="fas fa-database"></i> Supabase Ayarları</h5>
-            <form id="supabaseForm">
-                <div class="mb-3">
-                    <label for="supabaseUrl" class="form-label">Supabase URL</label>
-                    <input type="url" class="form-control" id="supabaseUrl" 
-                           placeholder="https://your-project.supabase.co" required>
+            <h5><i class="fas fa-database"></i> Veritabanı Bilgileri</h5>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> <strong>Lokal SQLite Veritabanı</strong>
+                <p class="mb-0 mt-2">Proje lokal SQLite veritabanı kullanmaktadır. Tüm veriler lokal olarak saklanır.</p>
+            </div>
+            <div class="webhook-status">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><strong>Durum:</strong></span>
+                    <span class="status-badge status-connected">
+                        <i class="fas fa-check-circle"></i> Aktif
+                    </span>
                 </div>
-                <div class="mb-3">
-                    <label for="supabaseKey" class="form-label">Supabase API Key</label>
-                    <input type="password" class="form-control" id="supabaseKey" 
-                           placeholder="Supabase anon key" required>
-                </div>
-                <div class="mb-3">
-                    <label for="supabaseServiceKey" class="form-label">Service Role Key</label>
-                    <input type="password" class="form-control" id="supabaseServiceKey" 
-                           placeholder="Service role key (opsiyonel)">
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Kaydet
-                    </button>
-                    <button type="button" class="btn btn-test" onclick="testSupabase()">
-                        <i class="fas fa-plug"></i> Bağlantıyı Test Et
-                    </button>
-                </div>
-                <div class="webhook-status">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span><strong>Durum:</strong></span>
-                        <span id="supabaseStatus" class="status-badge status-disconnected">
-                            <i class="fas fa-times-circle"></i> Bağlı Değil
-                        </span>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
 
         <!-- Map Scraper Webhook Ayarı -->
@@ -206,13 +185,18 @@
             <form method="post">
                 {% csrf_token %}
                 
-                <!-- Map Scraper Webhook -->
+                <!-- SERP API Key -->
                 <div class="mb-3">
-                    <label for="webhook_url" class="form-label">Map Scraper Webhook URL</label>
-                    <input type="url" class="form-control" id="webhook_url" name="webhook_url" 
-                           value="{{ webhook_url }}" 
-                           placeholder="https://notifyn8n.tezgel.com/webhook/your-webhook-id">
-                    <div class="form-text">Otomasyon Map Scraper workflow'unuzdan aldığınız webhook URL'ini buraya girin.</div>
+                    <label for="serp_api_key" class="form-label">
+                        <i class="fas fa-key"></i> SERP API Key
+                    </label>
+                    <input type="text" class="form-control" id="serp_api_key" name="serp_api_key" 
+                           value="{{ serp_api_key }}" 
+                           placeholder="Your SERP API Key">
+                    <div class="form-text">
+                        Google Maps verilerini çekmek için SERP API anahtarınızı buraya girin.
+                        <a href="https://serpapi.com/" target="_blank">SERP API</a> hesabınızdan alabilirsiniz.
+                    </div>
                 </div>
                 
                 <!-- Instagram Webhook -->
@@ -294,22 +278,18 @@
             </form>
         </div>
 
-        <!-- Supabase Bağlantı Durumu -->
+        <!-- Veritabanı Durumu -->
         <div class="settings-section">
-            <h5><i class="fas fa-database"></i> Supabase Bağlantı Durumu</h5>
+            <h5><i class="fas fa-database"></i> Veritabanı Durumu</h5>
             <div class="webhook-status">
                 <div class="d-flex justify-content-between align-items-center">
                     <span><strong>Durum:</strong></span>
-                    <span class="status-badge {% if supabase_connected %}status-connected{% else %}status-disconnected{% endif %}">
-                        <i class="fas {% if supabase_connected %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i> 
-                        {% if supabase_connected %}Bağlı{% else %}Bağlı Değil{% endif %}
+                    <span class="status-badge status-connected">
+                        <i class="fas fa-check-circle"></i> 
+                        Aktif
                     </span>
                 </div>
-                {% if supabase_connected %}
-                <small class="text-muted">Tüm veriler Supabase'den çekiliyor.</small>
-                {% else %}
-                <small class="text-danger">Supabase bağlantısı yok, veritabanından fallback kullanılıyor.</small>
-                {% endif %}
+                <small class="text-muted">Lokal SQLite veritabanı kullanılıyor.</small>
             </div>
         </div>
 
@@ -562,40 +542,6 @@ document.getElementById('systemForm').addEventListener('submit', function(e) {
         showNotification('Bağlantı hatası!', 'danger');
     });
 });
-
-function testSupabase() {
-    const url = document.getElementById('supabaseUrl').value;
-    const key = document.getElementById('supabaseKey').value;
-    
-    if (!url || !key) {
-        showNotification('Lütfen URL ve API Key alanlarını doldurun!', 'warning');
-        return;
-    }
-    
-    fetch('/api/test/supabase/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ url: url, key: key })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Supabase bağlantısı başarılı!', 'success');
-            updateSupabaseStatus(true);
-        } else {
-            showNotification('Bağlantı hatası: ' + (data.error || 'Bilinmeyen hata'), 'danger');
-            updateSupabaseStatus(false);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Test edilemedi!', 'danger');
-        updateSupabaseStatus(false);
-    });
-}
 
 function testN8N() {
     const webhookUrl = document.getElementById('webhook_url').value;

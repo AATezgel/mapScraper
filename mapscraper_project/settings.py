@@ -79,24 +79,13 @@ WSGI_APPLICATION = 'mapscraper_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-import dj_database_url
-
-# Supabase PostgreSQL veritabanı
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
-    # Supabase PostgreSQL kullan
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+# Lokal SQLite veritabanı kullan
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    # Yerel SQLite kullan (fallback)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 
 # Password validation
@@ -162,10 +151,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Supabase Settings
-SUPABASE_URL = os.getenv('SUPABASE_URL', '')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY', '')
-
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
@@ -178,16 +163,8 @@ CELERY_TIMEZONE = 'UTC'
 from celery.schedules import crontab
 
 CELERY_BEAT_SCHEDULE = {
-    'sync-n8n-data-every-30min': {
-        'task': 'mapscraper.tasks.sync_data_from_n8n_task',
-        'schedule': crontab(minute='*/30'),  # Her 30 dakikada bir
-    },
     'cleanup-old-jobs-daily': {
         'task': 'mapscraper.tasks.cleanup_old_jobs_task',
         'schedule': crontab(hour=2, minute=0),  # Her gün saat 02:00'da
-    },
-    'test-supabase-connection-hourly': {
-        'task': 'mapscraper.tasks.test_supabase_connection_task',
-        'schedule': crontab(minute=0),  # Her saat başında
     },
 }

@@ -99,10 +99,7 @@
     }
     .stat-card.tiktok::before { background: #000000; }
     
-    .stat-card.supabase { 
-        border-left-color: #3ecf8e; 
-    }
-    .stat-card.supabase::before { background: #3ecf8e; }
+    
     
     .stat-card.jobs { 
         border-left-color: #667eea; 
@@ -295,10 +292,6 @@
             <div class="quick-stat-label">Successful</div>
         </div>
         <div class="quick-stat">
-            <div class="quick-stat-number">{% if supabase_connected %}✓{% else %}✗{% endif %}</div>
-            <div class="quick-stat-label">Supabase</div>
-        </div>
-        <div class="quick-stat">
             <div class="quick-stat-number">6</div>
             <div class="quick-stat-label">Platforms</div>
         </div>
@@ -320,7 +313,7 @@
         <div class="stat-card instagram">
             <div class="stat-header">
                 <div>
-                    <div class="stat-number" id="instagram-count">0</div>
+                    <div class="stat-number">{{ instagram_count|default:0 }}</div>
                     <div class="stat-label">Instagram Profiles</div>
                     <div class="stat-change positive">+5% this week</div>
                 </div>
@@ -331,7 +324,7 @@
         <div class="stat-card facebook">
             <div class="stat-header">
                 <div>
-                    <div class="stat-number" id="facebook-count">0</div>
+                    <div class="stat-number">{{ facebook_count|default:0 }}</div>
                     <div class="stat-label">Facebook Pages</div>
                     <div class="stat-change positive">+8% this week</div>
                 </div>
@@ -342,7 +335,7 @@
         <div class="stat-card twitter">
             <div class="stat-header">
                 <div>
-                    <div class="stat-number" id="twitter-count">0</div>
+                    <div class="stat-number">{{ twitter_count|default:0 }}</div>
                     <div class="stat-label">Twitter Accounts</div>
                     <div class="stat-change negative">-2% this week</div>
                 </div>
@@ -353,7 +346,7 @@
         <div class="stat-card linkedin">
             <div class="stat-header">
                 <div>
-                    <div class="stat-number" id="linkedin-count">0</div>
+                    <div class="stat-number">{{ linkedin_count|default:0 }}</div>
                     <div class="stat-label">LinkedIn Profiles</div>
                     <div class="stat-change positive">+15% this week</div>
                 </div>
@@ -364,22 +357,11 @@
         <div class="stat-card tiktok">
             <div class="stat-header">
                 <div>
-                    <div class="stat-number" id="tiktok-count">0</div>
+                    <div class="stat-number">{{ tiktok_count|default:0 }}</div>
                     <div class="stat-label">TikTok Creators</div>
                     <div class="stat-change positive">+25% this week</div>
                 </div>
                 <div class="stat-icon"><i class="fab fa-tiktok"></i></div>
-            </div>
-        </div>
-        
-        <div class="stat-card supabase">
-            <div class="stat-header">
-                <div>
-                    <div class="stat-number">{{ supabase_count|default:0 }}</div>
-                    <div class="stat-label">Supabase Records</div>
-                    <div class="stat-change positive">Synced</div>
-                </div>
-                <div class="stat-icon"><i class="fas fa-database"></i></div>
             </div>
         </div>
         
